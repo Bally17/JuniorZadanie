@@ -34,6 +34,8 @@ export default function AddAdDialog({ open, onClose }: Props) {
 
   const [inputValue, setInputValue] = useState(''); // 🔧 ovládanie autocomplete inputu
   const [suggestions, setSuggestions] = useState<Company[]>([]);
+  const [selectedCompany, setSelectedCompany] = useState<Company | null>(null);
+
 
   const handleCancel = () => {
     setFormData({
@@ -46,6 +48,7 @@ export default function AddAdDialog({ open, onClose }: Props) {
     setInputValue('');
     setSuggestions([]);
     onClose();
+    setSelectedCompany(null);
     };
 
 
@@ -89,10 +92,38 @@ export default function AddAdDialog({ open, onClose }: Props) {
     }
   };
 
-  const handleSubmit = () => {
-    console.log(formData);
-    onClose();
-  };
+  const handleSubmit = async () => {
+    try {
+        if (!selectedCompany) {
+        alert('Firma musí byť vybraná z autocomplete.');
+        return;
+        }
+
+        const form = new FormData();
+        form.append('companyId', selectedCompany.id.toString());
+        form.append('adText', formData.adText);
+        if (formData.logo) form.append('logo', formData.logo);
+
+        await axios.post('/api/ads', form);
+
+        // Reset
+        setFormData({
+        name: '',
+        ico: '',
+        address: '',
+        adText: '',
+        logo: null
+        });
+        setInputValue('');
+        setSuggestions([]);
+        setSelectedCompany(null);
+        onClose();
+    } catch (err) {
+        console.error('Error submitting ad:', err);
+        alert('Nepodarilo sa uložiť inzerát.');
+    }
+    };
+
 
   return (
     <Dialog open={open} onClose={onClose} fullWidth maxWidth="sm">
@@ -110,15 +141,18 @@ export default function AddAdDialog({ open, onClose }: Props) {
             }}
             onChange={(e, value) => {
                 if (value && typeof value !== 'string') {
-                setFormData(prev => ({
+                    setSelectedCompany(value); // <- uchovaj vybranú firmu
+                    setFormData(prev => ({
                     ...prev,
                     name: value.name,
                     ico: value.ico,
                     address: value.municipality
-                }));
-                setInputValue(`${value.name} (${value.ico})`);
+                    }));
+                    setInputValue(`${value.name} (${value.ico})`);
+                } else {
+                    setSelectedCompany(null);
                 }
-            }}
+                }}
             renderInput={(params) => (
                 <TextField
                 {...params}
@@ -166,7 +200,7 @@ export default function AddAdDialog({ open, onClose }: Props) {
       </DialogContent>
       <DialogActions>
         <Button onClick={handleCancel}>Cancel</Button>
-        <Button variant="contained" onClick={handleSubmit}>Save</Button>
+        <Button variant="contained" onClick={handleSubmit} disabled={!selectedCompany}>Save</Button>
       </DialogActions>
     </Dialog>
   );
