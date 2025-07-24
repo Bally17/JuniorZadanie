@@ -99,6 +99,18 @@ app.get('/api/ads', async (req, res) => {
   }
 });
 
+app.delete('/api/ads/:id', async (req, res) => {
+  const id = parseInt(req.params.id, 10);
+  if (isNaN(id)) return res.status(400).json({ message: 'Invalid ad ID' });
+
+  try {
+    await prisma.advertisement.delete({ where: { id } });
+    res.status(204).end();
+  } catch (err) {
+    console.error('Error deleting ad:', err);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
 
 app.listen(PORT, () => {
   console.log(`🚀 Server is running on http://localhost:${PORT}`);

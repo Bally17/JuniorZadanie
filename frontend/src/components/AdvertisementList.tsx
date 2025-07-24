@@ -32,6 +32,19 @@ export default function AdvertisementList() {
     }
     };
 
+    const handleDelete = async (id: number) => {
+        if (!window.confirm('Are you sure you want to delete this ad?')) return;
+
+        try {
+            await axios.delete(`/api/ads/${id}`);
+            fetchAds(); // aktualizuj zoznam
+        } catch (err) {
+            console.error('Failed to delete ad:', err);
+            alert('Nepodarilo sa vymazať inzerát.');
+        }
+    };
+
+
 
   return (
     <div className="advertisement-container">
@@ -45,18 +58,26 @@ export default function AdvertisementList() {
 
       <div className="ad-list">
         {ads.map((ad) => (
-          <div key={ad.id} className="ad-item">
-            <h3>{ad.company.name} ({ad.company.ico})</h3>
-            <p>{ad.company.municipality}</p>
-            <p>{ad.adText}</p>
-            {ad.logoPath && (
-              <img
-                src={`http://localhost:4000/${ad.logoPath}`}
-                alt="Company logo"
-                style={{ maxWidth: '150px', marginTop: '10px' }}
-              />
-            )}
-          </div>
+            <div key={ad.id} className="ad-item">
+                <h3>{ad.company.name} ({ad.company.ico})</h3>
+                <p>{ad.company.municipality}</p>
+                <p>{ad.adText}</p>
+                {ad.logoPath && (
+                <img
+                    src={`http://localhost:4000/${ad.logoPath}`}
+                    alt="Company logo"
+                    style={{ maxWidth: '150px', marginTop: '10px' }}
+                />
+                )}
+                <Button
+                variant="outlined"
+                color="error"
+                onClick={() => handleDelete(ad.id)}
+                style={{ marginTop: '10px' }}
+                >
+                Delete
+                </Button>
+            </div>
         ))}
       </div>
     </div>
