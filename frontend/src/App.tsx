@@ -1,10 +1,10 @@
-import Autocomplete from './components/Autocomplete';
+import AdvertisementList from './components/AdvertisementList';
 
 function App() {
   return (
     <div>
       <h1 className="page-title">Company Search</h1>
-      <Autocomplete />
+      <AdvertisementList />
     </div>
   );
 }
