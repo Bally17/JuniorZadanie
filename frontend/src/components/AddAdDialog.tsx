@@ -1,13 +1,26 @@
 import {
   Dialog, DialogTitle, DialogContent, DialogActions,
-  TextField, Button
+  TextField, Button, Autocomplete
 } from '@mui/material';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import axios from 'axios';
 import './AddAdDialog.css';
 
 interface Props {
   open: boolean;
   onClose: () => void;
+}
+
+interface Company {
+  id: number;
+  rpoId: number;
+  ico: string;
+  name: string;
+  municipality: string;
+  establishment: string;
+  termination: string | null;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export default function AddAdDialog({ open, onClose }: Props) {
@@ -18,6 +31,50 @@ export default function AddAdDialog({ open, onClose }: Props) {
     adText: '',
     logo: null as File | null
   });
+
+  const [inputValue, setInputValue] = useState(''); // 🔧 ovládanie autocomplete inputu
+  const [suggestions, setSuggestions] = useState<Company[]>([]);
+
+  const handleCancel = () => {
+    setFormData({
+        name: '',
+        ico: '',
+        address: '',
+        adText: '',
+        logo: null
+    });
+    setInputValue('');
+    setSuggestions([]);
+    onClose();
+    };
+
+
+  useEffect(() => {
+    const controller = new AbortController();
+    const query = inputValue.trim();
+
+    if (query.length < 3) {
+        setSuggestions([]);
+        return;
+    }
+
+    const fetchSuggestions = async () => {
+        try {
+        const res = await axios.get(`/api/search?q=${query}`, {
+            signal: controller.signal
+        });
+        setSuggestions(res.data.slice(0, 10));
+        } catch (err) {
+        if (!axios.isCancel(err)) {
+            console.error(err);
+        }
+        }
+    };
+
+    fetchSuggestions();
+    return () => controller.abort();
+    }, [inputValue]);
+
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData(prev => ({
@@ -34,17 +91,65 @@ export default function AddAdDialog({ open, onClose }: Props) {
 
   const handleSubmit = () => {
     console.log(formData);
-    onClose(); // zatiaľ len zavrie
+    onClose();
   };
 
   return (
     <Dialog open={open} onClose={onClose} fullWidth maxWidth="sm">
       <DialogTitle>New Advertisement</DialogTitle>
       <DialogContent sx={{ display: 'flex', flexDirection: 'column', gap: 2, mt: 1 }}>
-        <TextField label="Company Name" name="name" value={formData.name} onChange={handleChange} />
-        <TextField label="IČO" name="ico" value={formData.ico} onChange={handleChange} />
-        <TextField label="Address" name="address" value={formData.address} onChange={handleChange} />
-        <TextField label="Advertisement Text" name="adText" multiline rows={3} value={formData.adText} onChange={handleChange} />
+        <Autocomplete
+            freeSolo
+            options={suggestions}
+            getOptionLabel={(option) =>
+                typeof option === 'string' ? option : `${option.name} (${option.ico})`
+            }
+            inputValue={inputValue}
+            onInputChange={(event, newInputValue) => {
+                setInputValue(newInputValue);
+            }}
+            onChange={(e, value) => {
+                if (value && typeof value !== 'string') {
+                setFormData(prev => ({
+                    ...prev,
+                    name: value.name,
+                    ico: value.ico,
+                    address: value.municipality
+                }));
+                setInputValue(`${value.name} (${value.ico})`);
+                }
+            }}
+            renderInput={(params) => (
+                <TextField
+                {...params}
+                label="Vyhľadať firmu (názov alebo IČO)"
+                />
+            )}
+        />
+
+
+        <TextField
+          label="IČO"
+          name="ico"
+          value={formData.ico}
+          onChange={handleChange}
+        />
+
+        <TextField
+          label="Address"
+          name="address"
+          value={formData.address}
+          onChange={handleChange}
+        />
+
+        <TextField
+          label="Advertisement Text"
+          name="adText"
+          multiline
+          rows={3}
+          value={formData.adText}
+          onChange={handleChange}
+        />
 
         <input
           accept="image/png, image/jpeg"
@@ -60,7 +165,7 @@ export default function AddAdDialog({ open, onClose }: Props) {
         </label>
       </DialogContent>
       <DialogActions>
-        <Button onClick={onClose}>Cancel</Button>
+        <Button onClick={handleCancel}>Cancel</Button>
         <Button variant="contained" onClick={handleSubmit}>Save</Button>
       </DialogActions>
     </Dialog>
