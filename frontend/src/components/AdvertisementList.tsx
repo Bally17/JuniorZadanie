@@ -18,6 +18,7 @@ interface Ad {
 export default function AdvertisementList() {
   const [open, setOpen] = useState(false);
   const [ads, setAds] = useState<Ad[]>([]);
+  const [loadingPdfId, setLoadingPdfId] = useState<number | null>(null);
 
   useEffect(() => {
     fetchAds();
@@ -25,7 +26,7 @@ export default function AdvertisementList() {
 
     const fetchAds = async () => {
     try {
-        const res = await axios.get('/api/ads');
+        const res = await axios.get<Ad[]>('/api/ads');
         setAds(res.data);
     } catch (err) {
         console.error('Error loading ads:', err);
@@ -48,11 +49,12 @@ export default function AdvertisementList() {
 
   return (
     <div className="advertisement-container">
-      <h2>Advertisements</h2>
+      <h2>Inzeráty</h2>
 
       <Button variant="contained" onClick={() => setOpen(true)}>
-        Add Advertisement
+        Pridať inzerát
       </Button>
+
 
       <AddAdDialog open={open} onClose={() => {setOpen(false); fetchAds();}} />
 
@@ -77,6 +79,31 @@ export default function AdvertisementList() {
                 >
                 Delete
                 </Button>
+                <Button
+                  variant="outlined"
+                  disabled={loadingPdfId === ad.id}
+                  onClick={async () => {
+                    setLoadingPdfId(ad.id);
+                    try {
+                      const res = await fetch(`/api/pdf/${ad.id}`);
+                      const blob = await res.blob();
+                      const url = URL.createObjectURL(blob);
+                      const link = document.createElement('a');
+                      link.href = url;
+                      link.download = `inzerat-${ad.id}.pdf`;
+                      link.click();
+                      URL.revokeObjectURL(url);
+                    } catch (err) {
+                      console.error('PDF download failed', err);
+                      alert('Nepodarilo sa stiahnuť PDF.');
+                    } finally {
+                      setLoadingPdfId(null);
+                    }
+                  }}
+                >
+                  {loadingPdfId === ad.id ? 'Sťahujem...' : 'Stiahnuť PDF'}
+                </Button>
+
             </div>
         ))}
       </div>

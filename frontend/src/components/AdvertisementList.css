@@ -1,3 +1,13 @@
 .advertisement-container {
     padding: 2rem;
 }
+
+.ad-item {
+  margin-bottom: 30px;
+  border-bottom: 1px solid #ccc;
+  padding-bottom: 15px;
+}
+
+.ad-item button {
+  margin-right: 10px;
+}
