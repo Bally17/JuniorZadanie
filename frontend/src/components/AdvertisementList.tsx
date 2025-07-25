@@ -66,15 +66,16 @@ export default function AdvertisementList() {
                 <h3>{ad.company.name} ({ad.company.ico})</h3>
                 <p>{ad.company.municipality}</p>
                 <p>{ad.adText}</p>
-                <p style={{ fontStyle: 'italic', fontSize: '0.9em' }}>
+                <p className="ad-date">
                   Pridané: {new Date(ad.createdAt).toLocaleDateString('sk-SK')}
                 </p>
+
                 {ad.logoPath && (
-                <img
+                  <img
                     src={`http://localhost:4000/${ad.logoPath}`}
                     alt="Company logo"
-                    style={{ maxWidth: '150px', marginTop: '10px' }}
-                />
+                    className="ad-logo"
+                  />
                 )}
                 <Button
                 variant="outlined"

@@ -1,5 +1,5 @@
 .advertisement-container {
-    padding: 2rem;
+  padding: 2rem;
 }
 
 .ad-item {
@@ -10,4 +10,15 @@
 
 .ad-item button {
   margin-right: 10px;
+  margin-top: 10px;
+}
+
+.ad-logo {
+  max-width: 150px;
+  margin-top: 10px;
+}
+
+.ad-date {
+  font-style: italic;
+  font-size: 0.9em;
 }
