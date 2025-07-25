@@ -9,6 +9,7 @@ interface Ad {
   adText: string;
   logoPath?: string;
   createdAt: string;
+  isTop: boolean;
   company: {
     name: string;
     ico: string;
@@ -69,7 +70,9 @@ export default function AdvertisementList() {
 
       <div className="ad-list">
         {ads.map((ad) => (
+          
           <div key={ad.id} className="ad-item">
+            {ad.isTop && <span className="top-badge">TOP</span>}
             <h3>{ad.company.name} ({ad.company.ico})</h3>
             <p>{ad.company.municipality}</p>
             <p>{ad.adText}</p>

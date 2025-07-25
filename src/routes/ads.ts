@@ -30,7 +30,11 @@ router.get('/', async (req, res) => {
         skip,
         take: limit,
         include: { company: true },
-        orderBy: { createdAt: 'desc' }
+        orderBy: [
+          { isTop: 'desc' },
+          { createdAt: 'desc' }
+        ]
+
       }),
       prisma.advertisement.count()
     ]);
@@ -57,7 +61,8 @@ router.post('/', (req, res, next) => {
     next();
   });
 }, async (req, res) => {
-  const { companyId, adText } = req.body;
+  const { companyId, adText, isTop } = req.body;
+
   if (!companyId || !adText) {
     return res.status(400).json({ message: 'Missing required fields.' });
   }
@@ -77,6 +82,7 @@ router.post('/', (req, res, next) => {
         companyId: parseInt(companyId, 10),
         adText,
         logoPath,
+        isTop: isTop === 'true',
       }
     });
     return res.status(201).json(newAd);
@@ -85,6 +91,7 @@ router.post('/', (req, res, next) => {
     return res.status(500).json({ message: 'Internal server error' });
   }
 });
+
 
 router.delete('/:id', async (req, res) => {
   const id = parseInt(req.params.id, 10);

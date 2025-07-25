@@ -34,3 +34,12 @@
 .pagination-info {
   font-weight: bold;
 }
+
+.top-badge {
+  color: white;
+  background: crimson;
+  padding: 2px 6px;
+  margin-left: 8px;
+  border-radius: 4px;
+  font-size: 0.75rem;
+}

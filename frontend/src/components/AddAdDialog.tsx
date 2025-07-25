@@ -5,6 +5,7 @@ import {
 import { useState, useEffect } from 'react';
 import axios from 'axios';
 import './AddAdDialog.css';
+import { Checkbox, FormControlLabel } from '@mui/material';
 
 interface Props {
   open: boolean;
@@ -29,7 +30,8 @@ export default function AddAdDialog({ open, onClose }: Props) {
     ico: '',
     address: '',
     adText: '',
-    logo: null as File | null
+    logo: null as File | null,
+    isTop: false
   });
 
   const [inputValue, setInputValue] = useState('');
@@ -42,7 +44,8 @@ export default function AddAdDialog({ open, onClose }: Props) {
       ico: '',
       address: '',
       adText: '',
-      logo: null
+      logo: null,
+      isTop: false
     });
     setInputValue('');
     setSuggestions([]);
@@ -99,6 +102,7 @@ export default function AddAdDialog({ open, onClose }: Props) {
       const form = new FormData();
       form.append('companyId', selectedCompany.id.toString());
       form.append('adText', formData.adText);
+      form.append('isTop', formData.isTop.toString());
       if (formData.logo) form.append('logo', formData.logo);
 
       await axios.post('/api/ads', form);
@@ -108,7 +112,8 @@ export default function AddAdDialog({ open, onClose }: Props) {
         ico: '',
         address: '',
         adText: '',
-        logo: null
+        logo: null,
+        isTop: false
       });
       setInputValue('');
       setSuggestions([]);
@@ -178,6 +183,17 @@ export default function AddAdDialog({ open, onClose }: Props) {
           value={formData.adText}
           onChange={handleChange}
         />
+
+        <FormControlLabel
+          control={
+            <Checkbox
+              checked={formData.isTop}
+              onChange={(e) => setFormData(prev => ({ ...prev, isTop: e.target.checked }))}
+            />
+          }
+          label="Top Advertisement"
+        />
+
 
         <input
           accept="image/png, image/jpeg"

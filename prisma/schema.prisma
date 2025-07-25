@@ -28,4 +28,5 @@ model Advertisement {
   adText    String
   logoPath  String?
   createdAt DateTime @default(now())
+  isTop      Boolean  @default(false)
 }
