@@ -28,7 +28,7 @@ export default function Autocomplete() {
         })
         .catch((err) => console.error(err))
         .finally(() => setLoading(false));
-    }, 300); // debounce
+    }, 300);
 
     return () => clearTimeout(timeout);
   }, [query]);

@@ -1,4 +1,3 @@
-// 📁 src/server.ts
 import express from 'express';
 import cors from 'cors';
 import path from 'path';
@@ -13,10 +12,9 @@ app.use(cors());
 app.use(express.json());
 app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 
-// 🔌 API Routes
 app.use('/api/ads', adsRoutes);
 app.use('/api/search', searchRoutes);
-app.use('/api/pdf', pdfRoutes); // route: /api/pdf/:id
+app.use('/api/pdf', pdfRoutes); 
 
 app.listen(PORT, () => {
   console.log(`🚀 Server is running on http://localhost:${PORT}`);

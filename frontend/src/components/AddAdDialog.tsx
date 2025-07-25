@@ -32,52 +32,49 @@ export default function AddAdDialog({ open, onClose }: Props) {
     logo: null as File | null
   });
 
-  const [inputValue, setInputValue] = useState(''); // 🔧 ovládanie autocomplete inputu
+  const [inputValue, setInputValue] = useState('');
   const [suggestions, setSuggestions] = useState<Company[]>([]);
   const [selectedCompany, setSelectedCompany] = useState<Company | null>(null);
 
-
   const handleCancel = () => {
     setFormData({
-        name: '',
-        ico: '',
-        address: '',
-        adText: '',
-        logo: null
+      name: '',
+      ico: '',
+      address: '',
+      adText: '',
+      logo: null
     });
     setInputValue('');
     setSuggestions([]);
     onClose();
     setSelectedCompany(null);
-    };
-
+  };
 
   useEffect(() => {
     const controller = new AbortController();
     const query = inputValue.trim();
 
     if (query.length < 3) {
-        setSuggestions([]);
-        return;
+      setSuggestions([]);
+      return;
     }
 
     const fetchSuggestions = async () => {
-        try {
+      try {
         const res = await axios.get(`/api/search?q=${query}`, {
-            signal: controller.signal
+          signal: controller.signal
         });
         setSuggestions(res.data.slice(0, 10));
-        } catch (err) {
+      } catch (err) {
         if (!axios.isCancel(err)) {
-            console.error(err);
+          console.error(err);
         }
-        }
+      }
     };
 
     fetchSuggestions();
     return () => controller.abort();
-    }, [inputValue]);
-
+  }, [inputValue]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData(prev => ({
@@ -94,76 +91,73 @@ export default function AddAdDialog({ open, onClose }: Props) {
 
   const handleSubmit = async () => {
     try {
-        if (!selectedCompany) {
-        alert('Firma musí byť vybraná z autocomplete.');
+      if (!selectedCompany) {
+        alert('You must select a company from the autocomplete.');
         return;
-        }
+      }
 
-        const form = new FormData();
-        form.append('companyId', selectedCompany.id.toString());
-        form.append('adText', formData.adText);
-        if (formData.logo) form.append('logo', formData.logo);
+      const form = new FormData();
+      form.append('companyId', selectedCompany.id.toString());
+      form.append('adText', formData.adText);
+      if (formData.logo) form.append('logo', formData.logo);
 
-        await axios.post('/api/ads', form);
+      await axios.post('/api/ads', form);
 
-        // Reset
-        setFormData({
+      setFormData({
         name: '',
         ico: '',
         address: '',
         adText: '',
         logo: null
-        });
-        setInputValue('');
-        setSuggestions([]);
-        setSelectedCompany(null);
-        onClose();
+      });
+      setInputValue('');
+      setSuggestions([]);
+      setSelectedCompany(null);
+      onClose();
     } catch (err) {
-        console.error('Error submitting ad:', err);
-        alert('Nepodarilo sa uložiť inzerát.');
+      console.error('Error submitting advertisement:', err);
+      alert('Failed to save advertisement.');
     }
-    };
-
+  };
 
   return (
     <Dialog open={open} onClose={onClose} fullWidth maxWidth="sm">
       <DialogTitle>New Advertisement</DialogTitle>
       <DialogContent sx={{ display: 'flex', flexDirection: 'column', gap: 2, mt: 1 }}>
         <Autocomplete
-            freeSolo
-            options={suggestions}
-            getOptionLabel={(option) =>
-                typeof option === 'string' ? option : `${option.name} (${option.ico})`
+          freeSolo
+          options={suggestions}
+          getOptionLabel={(option) =>
+            typeof option === 'string' ? option : `${option.name} (${option.ico})`
+          }
+          inputValue={inputValue}
+          onInputChange={(event, newInputValue) => {
+            setInputValue(newInputValue);
+          }}
+          onChange={(e, value) => {
+            if (value && typeof value !== 'string') {
+              setSelectedCompany(value);
+              setFormData(prev => ({
+                ...prev,
+                name: value.name,
+                ico: value.ico,
+                address: value.municipality
+              }));
+              setInputValue(`${value.name} (${value.ico})`);
+            } else {
+              setSelectedCompany(null);
             }
-            inputValue={inputValue}
-            onInputChange={(event, newInputValue) => {
-                setInputValue(newInputValue);
-            }}
-            onChange={(e, value) => {
-                if (value && typeof value !== 'string') {
-                    setSelectedCompany(value); // <- uchovaj vybranú firmu
-                    setFormData(prev => ({
-                    ...prev,
-                    name: value.name,
-                    ico: value.ico,
-                    address: value.municipality
-                    }));
-                    setInputValue(`${value.name} (${value.ico})`);
-                } else {
-                    setSelectedCompany(null);
-                }
-                }}
-            renderInput={(params) => (
-                <TextField
-                {...params}
-                label="Vyhľadať firmu (názov alebo IČO)"
-                />
-            )}
+          }}
+          renderInput={(params) => (
+            <TextField
+              {...params}
+              label="Search for a company (name or ICO)"
+            />
+          )}
         />
 
-
         <TextField
-          label="IČO"
+          label="ICO"
           name="ico"
           value={formData.ico}
           onChange={handleChange}
@@ -189,7 +183,7 @@ export default function AddAdDialog({ open, onClose }: Props) {
           accept="image/png, image/jpeg"
           type="file"
           id="upload-logo"
-          className='logo-input'
+          className="logo-input"
           onChange={handleLogoUpload}
         />
         <label htmlFor="upload-logo">
