@@ -19,18 +19,30 @@ const upload = multer({
   },
 });
 
-router.get('/', async (_req, res) => {
+router.get('/', async (req, res) => {
+  const page = parseInt(req.query.page as string) || 1;
+  const limit = parseInt(req.query.limit as string) || 5;
+  const skip = (page - 1) * limit;
+
   try {
-    const ads = await prisma.advertisement.findMany({
-      include: { company: true },
-      orderBy: { createdAt: 'desc' }
-    });
-    res.json(ads);
+    const [ads, totalCount] = await Promise.all([
+      prisma.advertisement.findMany({
+        skip,
+        take: limit,
+        include: { company: true },
+        orderBy: { createdAt: 'desc' }
+      }),
+      prisma.advertisement.count()
+    ]);
+
+    const pages = Math.ceil(totalCount / limit);
+    res.json({ ads, pages, totalCount });
   } catch (err) {
-    console.error('Error fetching advertisements:', err);
+    console.error('Error fetching ads:', err);
     res.status(500).json({ message: 'Internal server error' });
   }
 });
+
 
 router.post('/', (req, res, next) => {
   upload.single('logo')(req, res, function (err) {

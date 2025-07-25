@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { Button } from '@mui/material';
 import axios from 'axios';
 import AddAdDialog from './AddAdDialog';
@@ -20,26 +20,32 @@ export default function AdvertisementList() {
   const [open, setOpen] = useState(false);
   const [ads, setAds] = useState<Ad[]>([]);
   const [loadingPdfId, setLoadingPdfId] = useState<number | null>(null);
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(0);
+  const [totalCount, setTotalCount] = useState(0);
+
+
+  const fetchAds = useCallback(async () => {
+    try {
+      const res = await axios.get(`/api/ads?page=${page}&limit=5`);
+      setAds(res.data.ads);
+      setTotalPages(res.data.pages);
+      setTotalCount(res.data.totalCount); // <-- tu
+    } catch (err) {
+      console.error('Error loading ads:', err);
+    }
+  }, [page]);
 
   useEffect(() => {
     fetchAds();
-  }, []);
-
-  const fetchAds = async () => {
-    try {
-      const res = await axios.get<Ad[]>('/api/ads');
-      setAds(res.data);
-    } catch (err) {
-      console.error('Error loading advertisements:', err);
-    }
-  };
+  }, [fetchAds]);
 
   const handleDelete = async (id: number) => {
     if (!window.confirm('Are you sure you want to delete this advertisement?')) return;
 
     try {
       await axios.delete(`/api/ads/${id}`);
-      fetchAds();
+      fetchAds(); // safe to use now
     } catch (err) {
       console.error('Failed to delete advertisement:', err);
       alert('Failed to delete advertisement.');
@@ -48,7 +54,12 @@ export default function AdvertisementList() {
 
   return (
     <div className="advertisement-container">
-      <h2>Advertisements ({ads.length})</h2>
+      <h2>
+        {ads.length > 0
+          ? `Advertisements (${totalCount})`
+          : 'No advertisements found'}
+      </h2>
+
 
       <Button variant="contained" onClick={() => setOpen(true)}>
         Add Advertisement
@@ -110,6 +121,25 @@ export default function AdvertisementList() {
           </div>
         ))}
       </div>
+
+      {totalPages > 0 && (
+        <div className="pagination-container">
+          <Button
+            onClick={() => setPage(p => Math.max(p - 1, 1))}
+            disabled={page === 1}
+          >
+            Previous
+          </Button>
+          <span className="pagination-info">Page {page} of {totalPages}</span>
+          <Button
+            onClick={() => setPage(p => Math.min(p + 1, totalPages))}
+            disabled={page === totalPages}
+          >
+            Next
+          </Button>
+        </div>
+      )}
+
     </div>
   );
 }
