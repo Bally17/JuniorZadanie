@@ -64,6 +64,17 @@ router.delete('/:id', async (req, res) => {
   if (isNaN(id)) return res.status(400).json({ message: 'Invalid ad ID' });
 
   try {
+    const ad = await prisma.advertisement.findUnique({ where: { id } });
+    if (!ad) return res.status(404).json({ message: 'Ad not found' });
+
+    // ❌ Vymazanie loga z disku
+    if (ad.logoPath) {
+      const fullPath = path.join(__dirname, '../../', ad.logoPath);
+      if (fs.existsSync(fullPath)) {
+        fs.unlinkSync(fullPath);
+      }
+    }
+
     await prisma.advertisement.delete({ where: { id } });
     res.status(204).end();
   } catch (err) {

@@ -8,6 +8,7 @@ interface Ad {
   id: number;
   adText: string;
   logoPath?: string;
+  createdAt: string;
   company: {
     name: string;
     ico: string;
@@ -49,7 +50,8 @@ export default function AdvertisementList() {
 
   return (
     <div className="advertisement-container">
-      <h2>Inzeráty</h2>
+      <h2>Inzeráty ({ads.length})</h2>
+
 
       <Button variant="contained" onClick={() => setOpen(true)}>
         Pridať inzerát
@@ -64,6 +66,9 @@ export default function AdvertisementList() {
                 <h3>{ad.company.name} ({ad.company.ico})</h3>
                 <p>{ad.company.municipality}</p>
                 <p>{ad.adText}</p>
+                <p style={{ fontStyle: 'italic', fontSize: '0.9em' }}>
+                  Pridané: {new Date(ad.createdAt).toLocaleDateString('sk-SK')}
+                </p>
                 {ad.logoPath && (
                 <img
                     src={`http://localhost:4000/${ad.logoPath}`}
