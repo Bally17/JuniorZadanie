@@ -31,7 +31,7 @@ export default function AdvertisementList() {
       const res = await axios.get(`/api/ads?page=${page}&limit=5`);
       setAds(res.data.ads);
       setTotalPages(res.data.pages);
-      setTotalCount(res.data.totalCount); // <-- tu
+      setTotalCount(res.data.totalCount);
     } catch (err) {
       console.error('Error loading ads:', err);
     }
@@ -46,7 +46,7 @@ export default function AdvertisementList() {
 
     try {
       await axios.delete(`/api/ads/${id}`);
-      fetchAds(); // safe to use now
+      fetchAds();
     } catch (err) {
       console.error('Failed to delete advertisement:', err);
       alert('Failed to delete advertisement.');
