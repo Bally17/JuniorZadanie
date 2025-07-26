@@ -1,4 +1,3 @@
-// testServer.ts
 import express from 'express';
 import cors from 'cors';
 import bodyParser from 'body-parser';
@@ -12,3 +11,7 @@ app.use('/api/ads', adsRoute);
 app.use('/api/search', searchRoute);
 
 export default app;
+/**
+ * © 2025 Bc. Martin Ballay
+ * Licensed under the MIT License.
+ */

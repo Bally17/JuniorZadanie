@@ -19,3 +19,9 @@ app.use('/api/pdf', pdfRoutes);
 app.listen(PORT, () => {
   console.log(`🚀 Server is running on http://localhost:${PORT}`);
 });
+
+
+/**
+ * © 2025 Bc. Martin Ballay
+ * Licensed under the MIT License.
+ */

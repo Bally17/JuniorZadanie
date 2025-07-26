@@ -110,6 +110,12 @@ Spúšťa testy pomocou `jest`, vrátane testov pre `/api/search`.
 ## Príklady
 
 - Zoznam inzerátov obsahuje počet záznamov, dátum pridania a logo.
-- PDF obsahuje všetky údaje vrátane obrázka loga a je možné ho stiahnuť.
+- TOP inzeráty sa zobrazujú ako prvé s označením.
+- PDF obsahuje všetky údaje vrátane obrázka loga.
 - Validácia zamedzuje nahraniu nesprávnych formátov súborov alebo príliš veľkých log.
+- Dialog podporuje aj úpravu existujúcich inzerátov.
 
+## Licencia
+
+Tento projekt je dostupný pod [MIT licenciou](./LICENSE).
+© 2025 Bc. Martin Ballay

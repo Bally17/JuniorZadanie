@@ -10,3 +10,8 @@ function App() {
 }
 
 export default App;
+
+/**
+ * © 2025 Bc. Martin Ballay
+ * Licensed under the MIT License.
+ */

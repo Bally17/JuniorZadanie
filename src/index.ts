@@ -23,3 +23,9 @@ main()
   .finally(() => {
     prisma.$disconnect();
   });
+
+
+/**
+ * © 2025 Bc. Martin Ballay
+ * Licensed under the MIT License.
+ */
