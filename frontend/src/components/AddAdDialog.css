@@ -1,3 +1,8 @@
 .logo-input {
     display: none;
 }
+
+.autocomplete-highlight {
+  font-weight: 700;
+  color: #1976d2;
+}

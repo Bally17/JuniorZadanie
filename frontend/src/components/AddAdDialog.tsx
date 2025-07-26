@@ -6,6 +6,10 @@ import { useState, useEffect } from 'react';
 import axios from 'axios';
 import './AddAdDialog.css';
 import { Checkbox, FormControlLabel } from '@mui/material';
+const parse: any = require('autosuggest-highlight/parse');
+const match: any = require('autosuggest-highlight/match');
+
+
 
 interface Props {
   open: boolean;
@@ -159,6 +163,20 @@ export default function AddAdDialog({ open, onClose }: Props) {
               label="Search for a company (name or ICO)"
             />
           )}
+          renderOption={(props, option) => {
+            const matches = match(`${option.name} (${option.ico})`, inputValue);
+            const parts = parse(`${option.name} (${option.ico})`, matches);
+
+            return (
+              <li {...props}>
+                {parts.map((part: { text: string; highlight: boolean }, index: number) => (
+                  <span key={index} className={part.highlight ? 'autocomplete-highlight' : ''}>
+                    {part.text}
+                  </span>
+                ))}
+              </li>
+            );
+          }}
         />
 
         <TextField
