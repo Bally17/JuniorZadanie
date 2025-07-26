@@ -3,19 +3,9 @@ import { Button } from '@mui/material';
 import axios from 'axios';
 import AddAdDialog from './AddAdDialog';
 import './AdvertisementList.css';
+import type { Ad } from '../types';
 
-interface Ad {
-  id: number;
-  adText: string;
-  logoPath?: string;
-  createdAt: string;
-  isTop: boolean;
-  company: {
-    name: string;
-    ico: string;
-    municipality: string;
-  };
-}
+
 
 export default function AdvertisementList() {
   const [open, setOpen] = useState(false);
@@ -24,11 +14,12 @@ export default function AdvertisementList() {
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(0);
   const [totalCount, setTotalCount] = useState(0);
+  const [editingAd, setEditingAd] = useState<Ad | null>(null);
 
 
   const fetchAds = useCallback(async () => {
     try {
-      const res = await axios.get(`/api/ads?page=${page}&limit=5`);
+      const res = await axios.get(`/api/ads?page=${page}&limit=10`);
       setAds(res.data.ads);
       setTotalPages(res.data.pages);
       setTotalCount(res.data.totalCount);
@@ -66,7 +57,16 @@ export default function AdvertisementList() {
         Add Advertisement
       </Button>
 
-      <AddAdDialog open={open} onClose={() => { setOpen(false); fetchAds(); }} />
+      <AddAdDialog
+        open={open}
+        onClose={() => {
+          setOpen(false);
+          setEditingAd(null);
+          fetchAds();
+        }}
+        adToEdit={editingAd}
+      />
+
 
       <div className="ad-list">
         {ads.map((ad) => (
@@ -95,6 +95,17 @@ export default function AdvertisementList() {
               style={{ marginTop: '10px' }}
             >
               Delete
+            </Button>
+
+            <Button
+              variant="outlined"
+              onClick={() => {
+                setEditingAd(ad);
+                setOpen(true);
+              }}
+              style={{ marginTop: '10px', marginLeft: '10px' }}
+            >
+              Edit
             </Button>
 
             <Button

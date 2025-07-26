@@ -116,4 +116,46 @@ router.delete('/:id', async (req, res) => {
   }
 });
 
+router.put('/:id', (req, res, next) => {
+  upload.single('logo')(req, res, function (err) {
+    if (err instanceof multer.MulterError || err) {
+      return res.status(400).json({ message: err.message });
+    }
+    next();
+  });
+}, async (req, res) => {
+  const id = parseInt(req.params.id, 10);
+  const { companyId, adText, isTop } = req.body;
+
+  if (!companyId || !adText || isNaN(id)) {
+    return res.status(400).json({ message: 'Missing required fields.' });
+  }
+
+  let logoPath: string | undefined;
+  if (req.file) {
+    const ext = path.extname(req.file.originalname);
+    const newFileName = `${req.file.filename}${ext}`;
+    const newPath = path.join('uploads', newFileName);
+    fs.renameSync(req.file.path, newPath);
+    logoPath = newPath;
+  }
+
+  try {
+    const updatedAd = await prisma.advertisement.update({
+      where: { id },
+      data: {
+        companyId: parseInt(companyId, 10),
+        adText,
+        isTop: isTop === 'true',
+        ...(logoPath && { logoPath }),
+      },
+    });
+
+    return res.status(200).json(updatedAd);
+  } catch (err) {
+    console.error('Error updating advertisement:', err);
+    return res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
 export default router;

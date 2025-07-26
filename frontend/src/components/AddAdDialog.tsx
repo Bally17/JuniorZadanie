@@ -1,34 +1,27 @@
 import {
   Dialog, DialogTitle, DialogContent, DialogActions,
-  TextField, Button, Autocomplete
+  TextField, Button, Autocomplete, Checkbox, FormControlLabel
 } from '@mui/material';
 import { useState, useEffect } from 'react';
 import axios from 'axios';
 import './AddAdDialog.css';
-import { Checkbox, FormControlLabel } from '@mui/material';
+import type { Ad, Company } from '../types';
+
+
+
 const parse: any = require('autosuggest-highlight/parse');
 const match: any = require('autosuggest-highlight/match');
-
 
 
 interface Props {
   open: boolean;
   onClose: () => void;
+  adToEdit?: Ad | null;
 }
 
-interface Company {
-  id: number;
-  rpoId: number;
-  ico: string;
-  name: string;
-  municipality: string;
-  establishment: string;
-  termination: string | null;
-  createdAt: string;
-  updatedAt: string;
-}
 
-export default function AddAdDialog({ open, onClose }: Props) {
+
+export default function AddAdDialog({ open, onClose, adToEdit }: Props) {
   const [formData, setFormData] = useState({
     name: '',
     ico: '',
@@ -37,25 +30,35 @@ export default function AddAdDialog({ open, onClose }: Props) {
     logo: null as File | null,
     isTop: false
   });
-
   const [inputValue, setInputValue] = useState('');
   const [suggestions, setSuggestions] = useState<Company[]>([]);
   const [selectedCompany, setSelectedCompany] = useState<Company | null>(null);
 
-  const handleCancel = () => {
-    setFormData({
-      name: '',
-      ico: '',
-      address: '',
-      adText: '',
-      logo: null,
-      isTop: false
-    });
-    setInputValue('');
-    setSuggestions([]);
-    onClose();
-    setSelectedCompany(null);
-  };
+  useEffect(() => {
+    if (adToEdit) {
+      setFormData({
+        name: adToEdit.company.name,
+        ico: adToEdit.company.ico,
+        address: adToEdit.company.municipality,
+        adText: adToEdit.adText,
+        logo: null,
+        isTop: adToEdit.isTop
+      });
+      setInputValue(`${adToEdit.company.name} (${adToEdit.company.ico})`);
+      setSelectedCompany(adToEdit.company);
+    } else {
+      setFormData({
+        name: '',
+        ico: '',
+        address: '',
+        adText: '',
+        logo: null,
+        isTop: false
+      });
+      setInputValue('');
+      setSelectedCompany(null);
+    }
+  }, [adToEdit, open]);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -66,28 +69,17 @@ export default function AddAdDialog({ open, onClose }: Props) {
       return;
     }
 
-    const fetchSuggestions = async () => {
-      try {
-        const res = await axios.get(`/api/search?q=${query}`, {
-          signal: controller.signal
-        });
-        setSuggestions(res.data.slice(0, 10));
-      } catch (err) {
-        if (!axios.isCancel(err)) {
-          console.error(err);
-        }
-      }
-    };
+    axios.get(`/api/search?q=${query}`, { signal: controller.signal })
+      .then(res => setSuggestions(res.data.slice(0, 10)))
+      .catch(err => {
+        if (!axios.isCancel(err)) console.error(err);
+      });
 
-    fetchSuggestions();
     return () => controller.abort();
   }, [inputValue]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setFormData(prev => ({
-      ...prev,
-      [e.target.name]: e.target.value
-    }));
+    setFormData(prev => ({ ...prev, [e.target.name]: e.target.value }));
   };
 
   const handleLogoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -97,52 +89,42 @@ export default function AddAdDialog({ open, onClose }: Props) {
   };
 
   const handleSubmit = async () => {
+    if (!selectedCompany) {
+      alert('You must select a company from the autocomplete.');
+      return;
+    }
+
+    const form = new FormData();
+    form.append('companyId', selectedCompany.id.toString());
+    form.append('adText', formData.adText);
+    form.append('isTop', formData.isTop.toString());
+    if (formData.logo) form.append('logo', formData.logo);
+
     try {
-      if (!selectedCompany) {
-        alert('You must select a company from the autocomplete.');
-        return;
+      if (adToEdit) {
+        await axios.put(`/api/ads/${adToEdit.id}`, form);
+      } else {
+        await axios.post('/api/ads', form);
       }
 
-      const form = new FormData();
-      form.append('companyId', selectedCompany.id.toString());
-      form.append('adText', formData.adText);
-      form.append('isTop', formData.isTop.toString());
-      if (formData.logo) form.append('logo', formData.logo);
-
-      await axios.post('/api/ads', form);
-
-      setFormData({
-        name: '',
-        ico: '',
-        address: '',
-        adText: '',
-        logo: null,
-        isTop: false
-      });
-      setInputValue('');
-      setSuggestions([]);
-      setSelectedCompany(null);
       onClose();
     } catch (err) {
-      console.error('Error submitting advertisement:', err);
+      console.error('Error saving ad:', err);
       alert('Failed to save advertisement.');
     }
   };
 
   return (
     <Dialog open={open} onClose={onClose} fullWidth maxWidth="sm">
-      <DialogTitle>New Advertisement</DialogTitle>
+      <DialogTitle>{adToEdit ? 'Edit Advertisement' : 'New Advertisement'}</DialogTitle>
       <DialogContent sx={{ display: 'flex', flexDirection: 'column', gap: 2, mt: 1 }}>
         <Autocomplete
           freeSolo
+          disabled={!!adToEdit}
           options={suggestions}
-          getOptionLabel={(option) =>
-            typeof option === 'string' ? option : `${option.name} (${option.ico})`
-          }
+          getOptionLabel={(option) => typeof option === 'string' ? option : `${option.name} (${option.ico})`}
           inputValue={inputValue}
-          onInputChange={(event, newInputValue) => {
-            setInputValue(newInputValue);
-          }}
+          onInputChange={(e, newInputValue) => setInputValue(newInputValue)}
           onChange={(e, value) => {
             if (value && typeof value !== 'string') {
               setSelectedCompany(value);
@@ -158,15 +140,11 @@ export default function AddAdDialog({ open, onClose }: Props) {
             }
           }}
           renderInput={(params) => (
-            <TextField
-              {...params}
-              label="Search for a company (name or ICO)"
-            />
+            <TextField {...params} label="Search for a company (name or ICO)" />
           )}
           renderOption={(props, option) => {
             const matches = match(`${option.name} (${option.ico})`, inputValue);
             const parts = parse(`${option.name} (${option.ico})`, matches);
-
             return (
               <li {...props}>
                 {parts.map((part: { text: string; highlight: boolean }, index: number) => (
@@ -179,28 +157,9 @@ export default function AddAdDialog({ open, onClose }: Props) {
           }}
         />
 
-        <TextField
-          label="ICO"
-          name="ico"
-          value={formData.ico}
-          onChange={handleChange}
-        />
-
-        <TextField
-          label="Address"
-          name="address"
-          value={formData.address}
-          onChange={handleChange}
-        />
-
-        <TextField
-          label="Advertisement Text"
-          name="adText"
-          multiline
-          rows={3}
-          value={formData.adText}
-          onChange={handleChange}
-        />
+        <TextField label="ICO" name="ico" value={formData.ico} onChange={handleChange} />
+        <TextField label="Address" name="address" value={formData.address} onChange={handleChange} />
+        <TextField label="Advertisement Text" name="adText" multiline rows={3} value={formData.adText} onChange={handleChange} />
 
         <FormControlLabel
           control={
@@ -211,7 +170,6 @@ export default function AddAdDialog({ open, onClose }: Props) {
           }
           label="Top Advertisement"
         />
-
 
         <input
           accept="image/png, image/jpeg"
@@ -227,8 +185,10 @@ export default function AddAdDialog({ open, onClose }: Props) {
         </label>
       </DialogContent>
       <DialogActions>
-        <Button onClick={handleCancel}>Cancel</Button>
-        <Button variant="contained" onClick={handleSubmit} disabled={!selectedCompany}>Save</Button>
+        <Button onClick={onClose}>Cancel</Button>
+        <Button variant="contained" onClick={handleSubmit} disabled={!selectedCompany}>
+          {adToEdit ? 'Update' : 'Save'}
+        </Button>
       </DialogActions>
     </Dialog>
   );
